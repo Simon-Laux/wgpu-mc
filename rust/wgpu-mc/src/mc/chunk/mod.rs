@@ -229,3 +229,9 @@ impl ChunkManager {
         self.section_buffers.store(Arc::new(map));
     }
 }
+
+impl Default for ChunkManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}

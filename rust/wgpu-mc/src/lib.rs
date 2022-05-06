@@ -170,7 +170,7 @@ impl WmRenderer {
     }
 
     pub fn resize(&self, new_size: WindowSize) {
-        if new_size.width <= 0 || new_size.height <= 0 {
+        if new_size.width == 0 || new_size.height == 0 {
             return;
         }
 

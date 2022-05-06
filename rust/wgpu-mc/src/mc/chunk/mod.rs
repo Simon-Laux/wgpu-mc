@@ -35,9 +35,9 @@ pub struct ChunkSection {
 }
 
 pub struct RenderLayers {
-    terrain: Box<[ChunkSection; CHUNK_SECTIONS_PER]>,
-    transparent: Box<[ChunkSection; CHUNK_SECTIONS_PER]>,
-    grass: Box<[ChunkSection; CHUNK_SECTIONS_PER]>,
+    pub terrain: Box<[ChunkSection; CHUNK_SECTIONS_PER]>,
+    pub transparent: Box<[ChunkSection; CHUNK_SECTIONS_PER]>,
+    pub grass: Box<[ChunkSection; CHUNK_SECTIONS_PER]>,
 }
 
 #[derive(Debug)]

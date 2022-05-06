@@ -1,6 +1,6 @@
 use wgpu_mc::mc::block::BlockState;
 use wgpu_mc::mc::chunk::{Chunk, CHUNK_VOLUME};
-use wgpu_mc::render::world::chunk::BakedChunkLayer;
+
 use wgpu_mc::WmRenderer;
 
 pub fn make_chunks(wm: &WmRenderer) -> Vec<Chunk> {

@@ -23,7 +23,6 @@ use crate::mc::block::blockstate::BlockstateVariantDefinitionModel;
 use crate::render::pipeline::terrain::BLOCK_ATLAS_NAME;
 use crate::{WgpuState, WmRenderer};
 use indexmap::map::IndexMap;
-use multi_map::MultiMap;
 
 pub mod block;
 pub mod chunk;

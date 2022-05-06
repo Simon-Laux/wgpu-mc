@@ -8,7 +8,7 @@ use crate::model::MeshVertex;
 use crate::render::atlas::{TextureManager, ATLAS_DIMENSIONS};
 use crate::render::pipeline::terrain::BLOCK_ATLAS_NAME;
 use crate::texture::UV;
-use cgmath::{Matrix3, Matrix4, SquareMatrix, Vector3};
+use cgmath::{Matrix3, SquareMatrix, Vector3};
 
 #[derive(Debug)]
 pub struct BlockModelFaces {

@@ -6,26 +6,24 @@ extern crate core;
 use crate::gl::GlTexture;
 use arc_swap::ArcSwap;
 use byteorder::{LittleEndian, ReadBytesExt};
-use cgmath::{Matrix4, Vector3};
+use cgmath::Matrix4;
 use core::slice;
 use crossbeam_channel::{unbounded, Receiver, Sender};
 use futures::executor::block_on;
 use gl::pipeline::{GLCommand, GlPipeline};
 use jni::objects::{JClass, JObject, JString, JValue, ReleaseMode};
 use jni::sys::{
-    _jobject, jboolean, jbyteArray, jdouble, jfloat, jfloatArray, jint, jintArray, jlong, jobject,
-    jstring,
+    jboolean, jbyteArray, jfloat, jfloatArray, jint, jintArray, jlong, jobject, jstring,
 };
 use jni::{JNIEnv, JavaVM};
 use once_cell::sync::OnceCell;
-use parking_lot::{Mutex, RwLock};
+use parking_lot::RwLock;
 use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
 use std::convert::TryFrom;
 use std::io::Cursor;
 use std::num::NonZeroU32;
 use std::sync::Arc;
-use std::thread;
-use std::time::Instant;
+
 use wgpu::Extent3d;
 use wgpu_mc::mc::block::Block;
 use wgpu_mc::mc::datapack::NamespacedResource;
@@ -38,7 +36,7 @@ use wgpu_mc::wgpu;
 use wgpu_mc::wgpu::ImageDataLayout;
 use wgpu_mc::{HasWindowSize, WindowSize, WmRenderer};
 use winit::dpi::{PhysicalPosition, PhysicalSize};
-use winit::event::{ElementState, Event, ModifiersState, MouseButton, VirtualKeyCode, WindowEvent};
+use winit::event::{ElementState, Event, ModifiersState, MouseButton, WindowEvent};
 use winit::event_loop::ControlFlow;
 use winit::window::Window;
 
@@ -327,10 +325,10 @@ pub extern "system" fn Java_dev_birb_wgpu_rust_WgpuNative_startRendering(
                             .unwrap();
                     }
                     WindowEvent::MouseInput {
-                        device_id,
+                        device_id: _,
                         state,
                         button,
-                        modifiers,
+                        modifiers: _,
                     } => {
                         CHANNELS
                             .get()
@@ -348,9 +346,9 @@ pub extern "system" fn Java_dev_birb_wgpu_rust_WgpuNative_startRendering(
                             .unwrap();
                     }
                     WindowEvent::KeyboardInput {
-                        device_id,
+                        device_id: _,
                         input,
-                        is_synthetic,
+                        is_synthetic: _,
                     } => {
                         // input.scancode
                         match input.virtual_keycode {
@@ -390,7 +388,7 @@ pub extern "system" fn Java_dev_birb_wgpu_rust_WgpuNative_startRendering(
 #[no_mangle]
 pub extern "system" fn Java_dev_birb_wgpu_rust_WgpuNative_runHelperThread(
     env: JNIEnv,
-    class: JClass,
+    _class: JClass,
 ) {
     let (_, rx) = CHANNELS.get_or_init(|| {
         let (tx, rx) = unbounded();
@@ -549,7 +547,7 @@ pub extern "system" fn Java_dev_birb_wgpu_rust_WgpuNative_bakeBlockModels(
     env: JNIEnv,
     _class: JClass,
 ) -> jobject {
-    let renderer = RENDERER.get().unwrap();
+    let _renderer = RENDERER.get().unwrap();
 
     let block_hashmap = env.new_object("java/util/HashMap", "()V", &[]).unwrap();
 
@@ -867,7 +865,7 @@ pub extern "system" fn Java_dev_birb_wgpu_rust_WgpuNative_wmUsePipeline(
 #[no_mangle]
 pub extern "system" fn Java_dev_birb_wgpu_rust_WgpuNative_getVideoMode(
     env: JNIEnv,
-    class: JClass,
+    _class: JClass,
 ) -> jstring {
     let video_mode = WINDOW
         .get()
@@ -1001,18 +999,18 @@ pub extern "system" fn Java_dev_birb_wgpu_rust_WgpuNative_setIndexBuffer(
 
 #[no_mangle]
 pub extern "system" fn Java_dev_birb_wgpu_rust_WgpuNative_scheduleChunkRebuild(
-    env: JNIEnv,
-    class: JClass,
-    x: jint,
-    z: jint,
+    _env: JNIEnv,
+    _class: JClass,
+    _x: jint,
+    _z: jint,
 ) {
     //TODO
 }
 
 #[no_mangle]
 pub extern "system" fn Java_dev_birb_wgpu_rust_WgpuNative_setCursorPosition(
-    env: JNIEnv,
-    class: JClass,
+    _env: JNIEnv,
+    _class: JClass,
     x: f64,
     y: f64,
 ) {
@@ -1027,8 +1025,8 @@ const GLFW_CURSOR_DISABLED: i32 = 212995;
 /// See https://www.glfw.org/docs/3.3/input_guide.html#cursor_mode
 #[no_mangle]
 pub extern "system" fn Java_dev_birb_wgpu_rust_WgpuNative_setCursorMode(
-    env: JNIEnv,
-    class: JClass,
+    _env: JNIEnv,
+    _class: JClass,
     mode: i32,
 ) {
     match mode {

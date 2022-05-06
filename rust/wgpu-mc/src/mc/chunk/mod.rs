@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use crate::render::world::chunk::BakedChunkLayer;
 
 use arc_swap::ArcSwap;
-use dashmap::DashMap;
+
 use parking_lot::RwLock;
 use rayon::iter::IntoParallelRefIterator;
 use std::convert::TryInto;
@@ -23,8 +23,7 @@ pub const CHUNK_SECTION_HEIGHT: usize = 1;
 pub const CHUNK_SECTIONS_PER: usize = CHUNK_HEIGHT / CHUNK_SECTION_HEIGHT;
 pub const SECTION_VOLUME: usize = CHUNK_AREA * CHUNK_SECTION_HEIGHT;
 
-use crate::wgpu::util::{BufferInitDescriptor, DeviceExt};
-use crate::{nsr, WmRenderer};
+use crate::WmRenderer;
 
 pub type ChunkPos = (i32, i32);
 
@@ -194,7 +193,7 @@ impl ChunkManager {
             self.loaded_chunks
                 .read()
                 .iter()
-                .map(|(pos, chunk)| chunk.load_full())
+                .map(|(_pos, chunk)| chunk.load_full())
                 .collect::<Vec<_>>()
         };
 
@@ -214,7 +213,7 @@ impl ChunkManager {
 
         chunks.iter().for_each(|chunk| {
             let baked = chunk.baked.load();
-            let layers = ((**baked).as_ref().unwrap());
+            let layers = (**baked).as_ref().unwrap();
 
             glass.extend(&layers.glass);
             grass.extend(&layers.grass);

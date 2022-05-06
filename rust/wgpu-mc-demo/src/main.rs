@@ -17,12 +17,10 @@ use winit::event::{DeviceEvent, ElementState, Event, KeyboardInput, VirtualKeyCo
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::Window;
 
-use std::convert::TryFrom;
 use std::sync::Arc;
 use wgpu_mc::mc::resource::ResourceProvider;
 
 use futures::StreamExt;
-use std::collections::HashMap;
 
 use arc_swap::ArcSwap;
 use fastanvil::RegionBuffer;
@@ -33,28 +31,16 @@ use fastanvil::pre18::JavaChunk;
 use fastnbt::de::from_bytes;
 use rayon::iter::IntoParallelIterator;
 use wgpu_mc::mc::block::Block;
-use wgpu_mc::mc::entity::{
-    Cuboid, CuboidUV, DescribedEntityInstances, EntityInstance, EntityManager, EntityModel,
-    EntityPart, PartTransform,
-};
 
-use wgpu_mc::render::atlas::{Atlas, ATLAS_DIMENSIONS};
-use wgpu_mc::render::entity::pipeline::EntityGroupInstancingFrame;
-use wgpu_mc::render::entity::EntityRenderInstance;
 use wgpu_mc::render::pipeline::debug_lines::DebugLinesPipeline;
 use wgpu_mc::render::pipeline::entity::EntityPipeline;
-use wgpu_mc::render::pipeline::grass::GrassPipeline;
+
 use wgpu_mc::render::pipeline::terrain::TerrainPipeline;
 use wgpu_mc::render::pipeline::transparent::TransparentPipeline;
 use wgpu_mc::render::pipeline::WmPipeline;
-use wgpu_mc::render::shader::{WgslShader, WmShader};
 
 use crate::chunk::make_chunks;
 use crate::entity::describe_entity;
-use wgpu_mc::wgpu::util::{BufferInitDescriptor, DeviceExt};
-use wgpu_mc::wgpu::{
-    BindGroupDescriptor, BindGroupEntry, BindGroupLayoutDescriptor, BindGroupLayoutEntry,
-};
 
 struct FsResourceProvider {
     pub asset_root: PathBuf,
@@ -199,7 +185,7 @@ fn begin_rendering(
     wm: WmRenderer,
     _chunks: Vec<(usize, usize, JavaChunk)>,
 ) {
-    let entity_rendering = describe_entity(&wm);
+    let _entity_rendering = describe_entity(&wm);
 
     let chunks = make_chunks(&wm);
 

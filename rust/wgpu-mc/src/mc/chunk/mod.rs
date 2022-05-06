@@ -1,16 +1,15 @@
-use std::collections::HashMap;
 use crate::mc::block::{BlockPos, BlockState};
-
+use std::collections::HashMap;
 
 use crate::render::world::chunk::BakedChunkLayer;
 
-use std::sync::Arc;
-use std::convert::TryInto;
-use std::time::Instant;
 use arc_swap::ArcSwap;
 use dashmap::DashMap;
 use parking_lot::RwLock;
 use rayon::iter::IntoParallelRefIterator;
+use std::convert::TryInto;
+use std::sync::Arc;
+use std::time::Instant;
 
 use crate::mc::BlockManager;
 use crate::render::pipeline::grass::GrassVertex;
@@ -24,8 +23,8 @@ pub const CHUNK_SECTION_HEIGHT: usize = 1;
 pub const CHUNK_SECTIONS_PER: usize = CHUNK_HEIGHT / CHUNK_SECTION_HEIGHT;
 pub const SECTION_VOLUME: usize = CHUNK_AREA * CHUNK_SECTION_HEIGHT;
 
-use crate::{nsr, WmRenderer};
 use crate::wgpu::util::{BufferInitDescriptor, DeviceExt};
+use crate::{nsr, WmRenderer};
 
 pub type ChunkPos = (i32, i32);
 
@@ -33,50 +32,56 @@ pub type ChunkPos = (i32, i32);
 pub struct ChunkSection {
     pub empty: bool,
     pub blocks: Box<[BlockState; SECTION_VOLUME]>,
-    pub offset_y: usize
+    pub offset_y: usize,
 }
 
 pub struct RenderLayers {
     terrain: Box<[ChunkSection; CHUNK_SECTIONS_PER]>,
     transparent: Box<[ChunkSection; CHUNK_SECTIONS_PER]>,
-    grass: Box<[ChunkSection; CHUNK_SECTIONS_PER]>
+    grass: Box<[ChunkSection; CHUNK_SECTIONS_PER]>,
 }
 
 #[derive(Debug)]
 pub struct ChunkLayers {
     grass: BakedChunkLayer<GrassVertex>,
     glass: BakedChunkLayer<TerrainVertex>,
-    terrain: BakedChunkLayer<TerrainVertex>
+    terrain: BakedChunkLayer<TerrainVertex>,
 }
 
 #[derive(Debug)]
 pub struct Chunk {
     pub pos: ChunkPos,
     pub sections: Box<[ChunkSection; CHUNK_SECTIONS_PER]>,
-    pub baked: ArcSwap<Option<ChunkLayers>>
+    pub baked: ArcSwap<Option<ChunkLayers>>,
 }
 
 impl Chunk {
     #[must_use]
     pub fn new(pos: ChunkPos, blocks: Box<[BlockState; CHUNK_AREA * CHUNK_HEIGHT]>) -> Self {
-        let sections: Box<[ChunkSection; CHUNK_SECTIONS_PER]> = (0..CHUNK_SECTIONS_PER).map(|section| {
-            let start_index = section * SECTION_VOLUME;
-            let end_index = (section + 1) * SECTION_VOLUME;
-            let block_section: Box<[BlockState; SECTION_VOLUME]> = (start_index..end_index).map(|index| {
-                blocks[index]
-            }).collect::<Box<[BlockState]>>().try_into().unwrap();
+        let sections: Box<[ChunkSection; CHUNK_SECTIONS_PER]> = (0..CHUNK_SECTIONS_PER)
+            .map(|section| {
+                let start_index = section * SECTION_VOLUME;
+                let end_index = (section + 1) * SECTION_VOLUME;
+                let block_section: Box<[BlockState; SECTION_VOLUME]> = (start_index..end_index)
+                    .map(|index| blocks[index])
+                    .collect::<Box<[BlockState]>>()
+                    .try_into()
+                    .unwrap();
 
-            ChunkSection {
-                empty: !blocks.iter().any(|state| state.packed_key.is_some()),
-                blocks: block_section,
-                offset_y: section * CHUNK_SECTION_HEIGHT
-            }
-        }).collect::<Box<[ChunkSection]>>().try_into().unwrap();
+                ChunkSection {
+                    empty: !blocks.iter().any(|state| state.packed_key.is_some()),
+                    blocks: block_section,
+                    offset_y: section * CHUNK_SECTION_HEIGHT,
+                }
+            })
+            .collect::<Box<[ChunkSection]>>()
+            .try_into()
+            .unwrap();
 
         Self {
             pos,
             sections,
-            baked: ArcSwap::new(Arc::new(None))
+            baked: ArcSwap::new(Arc::new(None)),
         }
     }
 
@@ -90,61 +95,66 @@ impl Chunk {
     }
 
     pub fn bake(&self, block_manager: &BlockManager) {
-        let grass_index = *block_manager.variant_indices.get(
-            &"minecraft:blockstates/grass.json#".try_into().unwrap()
-        ).unwrap() as u32;
+        let grass_index = *block_manager
+            .variant_indices
+            .get(&"minecraft:blockstates/grass.json#".try_into().unwrap())
+            .unwrap() as u32;
 
-        let glass_index = *block_manager.variant_indices.get(
-            &"minecraft:blockstates/glass.json#".try_into().unwrap()
-        ).unwrap() as u32;
+        let glass_index = *block_manager
+            .variant_indices
+            .get(&"minecraft:blockstates/glass.json#".try_into().unwrap())
+            .unwrap() as u32;
 
-        let grass = BakedChunkLayer::bake(block_manager, self, |v, x, y, z| {
-            GrassVertex {
+        let grass = BakedChunkLayer::bake(
+            block_manager,
+            self,
+            |v, x, y, z| GrassVertex {
                 position: [v.position[0] + x, v.position[1] + y, v.position[2] + z],
                 tex_coords: v.tex_coords,
                 lightmap_coords: [0.0, 0.0],
                 normal: v.normal,
-                biome_color_coords: [0.0, 0.0]
-            }
-        }, Box::new(move |state| {
-            match state.packed_key {
+                biome_color_coords: [0.0, 0.0],
+            },
+            Box::new(move |state| match state.packed_key {
                 None => false,
-                Some(key) => key == grass_index
-            }
-        }));
+                Some(key) => key == grass_index,
+            }),
+        );
 
-        let glass = BakedChunkLayer::bake(block_manager, self, |v, x, y, z| {
-            TerrainVertex {
+        let glass = BakedChunkLayer::bake(
+            block_manager,
+            self,
+            |v, x, y, z| TerrainVertex {
                 position: [v.position[0] + x, v.position[1] + y, v.position[2] + z],
                 tex_coords: v.tex_coords,
                 lightmap_coords: [0.0, 0.0],
-                normal: v.normal
-            }
-        }, Box::new(move |state| {
-            match state.packed_key {
+                normal: v.normal,
+            },
+            Box::new(move |state| match state.packed_key {
                 None => false,
-                Some(key) => key == glass_index
-            }
-        }));
+                Some(key) => key == glass_index,
+            }),
+        );
 
-        let terrain = BakedChunkLayer::bake(block_manager, self, |v, x, y, z| {
-            TerrainVertex {
+        let terrain = BakedChunkLayer::bake(
+            block_manager,
+            self,
+            |v, x, y, z| TerrainVertex {
                 position: [v.position[0] + x, v.position[1] + y, v.position[2] + z],
                 tex_coords: v.tex_coords,
                 lightmap_coords: [0.0, 0.0],
-                normal: v.normal
-            }
-        }, Box::new(move |state| {
-            match state.packed_key {
+                normal: v.normal,
+            },
+            Box::new(move |state| match state.packed_key {
                 None => false,
-                Some(key) => key != grass_index && key != glass_index
-            }
-        }));
+                Some(key) => key != grass_index && key != glass_index,
+            }),
+        );
 
         self.baked.store(Arc::new(Some(ChunkLayers {
             grass,
             glass,
-            terrain
+            terrain,
         })));
     }
 }
@@ -156,7 +166,7 @@ pub struct WorldBuffers {
     pub south: (wgpu::Buffer, usize),
     pub west: (wgpu::Buffer, usize),
     pub east: (wgpu::Buffer, usize),
-    pub other: (wgpu::Buffer, usize)
+    pub other: (wgpu::Buffer, usize),
 }
 
 pub struct ChunkManager {
@@ -164,7 +174,7 @@ pub struct ChunkManager {
     //we need to keep the model coordinates as close to 0,0,0 as possible
     pub chunk_origin: ArcSwap<ChunkPos>,
     pub loaded_chunks: RwLock<HashMap<ChunkPos, ArcSwap<Chunk>>>,
-    pub section_buffers: ArcSwap<HashMap<String, WorldBuffers>>
+    pub section_buffers: ArcSwap<HashMap<String, WorldBuffers>>,
 }
 
 impl ChunkManager {
@@ -173,7 +183,7 @@ impl ChunkManager {
         ChunkManager {
             chunk_origin: ArcSwap::new(Arc::new((0, 0))),
             loaded_chunks: RwLock::new(HashMap::new()),
-            section_buffers: ArcSwap::new(Arc::new(HashMap::new()))
+            section_buffers: ArcSwap::new(Arc::new(HashMap::new())),
         }
     }
 
@@ -181,15 +191,22 @@ impl ChunkManager {
         let block_manager = wm.mc.block_manager.read();
 
         let chunks = {
-            self.loaded_chunks.read().iter().map(|(pos, chunk)| {
-                chunk.load_full()
-            }).collect::<Vec<_>>()
+            self.loaded_chunks
+                .read()
+                .iter()
+                .map(|(pos, chunk)| chunk.load_full())
+                .collect::<Vec<_>>()
         };
 
         use rayon::iter::ParallelIterator;
         let time = Instant::now();
-        chunks.par_iter().for_each(|chunk| chunk.bake(&block_manager));
-        println!("Baked chunk in {}ms", Instant::now().duration_since(time).as_millis());
+        chunks
+            .par_iter()
+            .for_each(|chunk| chunk.bake(&block_manager));
+        println!(
+            "Baked chunk in {}ms",
+            Instant::now().duration_since(time).as_millis()
+        );
 
         let mut glass = BakedChunkLayer::new();
         let mut grass = BakedChunkLayer::new();

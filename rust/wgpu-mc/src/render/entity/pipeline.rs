@@ -1,12 +1,5 @@
-
-
-
-
-
-
-
-use std::sync::Arc;
 use crate::model::BindableTexture;
+use std::sync::Arc;
 
 pub struct EntityGroupInstancingFrame {
     ///The model for the entity
@@ -23,5 +16,5 @@ pub struct EntityGroupInstancingFrame {
     ///how many entities to draw
     pub instance_count: u32,
     ///how many vertices per entity
-    pub vertex_count: u32
+    pub vertex_count: u32,
 }
